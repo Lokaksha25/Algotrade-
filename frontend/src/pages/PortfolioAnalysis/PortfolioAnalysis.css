@@ -1,0 +1,124 @@
+/* ── Portfolio Analysis Page ───────────────────────────────────── */
+.portfolio-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.knapsack-section {
+  padding: var(--space-lg);
+}
+
+.knapsack-comparison {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.knapsack-method {
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.knapsack-method-name {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.knapsack-method-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+
+.knapsack-method-pct {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.quality-bar-container {
+  margin-top: var(--space-lg);
+}
+
+.quality-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+
+.quality-bar-track {
+  height: 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.quality-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.allocation-section {
+  padding: var(--space-lg);
+}
+
+.portfolio-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+.mst-section {
+  padding: var(--space-lg);
+}
+
+.heatmap-section {
+  padding: var(--space-lg);
+}
+
+.mst-stats {
+  display: flex;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.mst-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mst-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.mst-stat-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+@media (max-width: 1000px) {
+  .portfolio-top, .portfolio-bottom { grid-template-columns: 1fr; }
+  .knapsack-comparison { grid-template-columns: 1fr; }
+}

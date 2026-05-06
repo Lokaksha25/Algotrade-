@@ -1,0 +1,79 @@
+/* ── Algorithm Card ────────────────────────────────────────────── */
+.algo-card {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.algo-card.selected {
+  border-color: var(--accent-blue);
+  background: var(--bg-card-hover);
+}
+
+.algo-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.algo-card-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.algo-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.algo-card-paradigm {
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+
+.algo-card-description {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.algo-card-complexity {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: auto;
+}
+
+.complexity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.complexity-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.complexity-value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.complexity-value--brute {
+  color: var(--text-secondary);
+}
+
+.complexity-value--optimized {
+  color: var(--accent-blue);
+}
