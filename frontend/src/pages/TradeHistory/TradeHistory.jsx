@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import PageWrapper from '../../components/Layout/PageWrapper';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
-import { runBacktest } from '../../services/api';
+import { DEFAULT_BACKTEST_CONFIG, runBacktest } from '../../services/api';
 import { formatCurrency, formatPercent, formatDate, formatDuration } from '../../utils/formatters';
 import { motion } from 'framer-motion';
 import './TradeHistory.css';
@@ -42,6 +42,20 @@ function generateDemoTrades() {
 
 const PAGE_SIZE = 15;
 
+function renderSortArrow(column, sortKey, sortDir) {
+  return sortKey === column ? <span className="sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span> : null;
+}
+
+function normalizeTrades(trades) {
+  return (trades || []).map((trade, i) => ({
+    ...trade,
+    id: trade.id || i + 1,
+    pnl: trade.pnl ?? trade.profit ?? 0,
+    pnl_pct: trade.pnl_pct ?? ((trade.profit_pct ?? 0) / 100),
+    signal: trade.signal ?? trade.source ?? 'Backtest',
+  }));
+}
+
 export default function TradeHistory() {
   const [allTrades, setAllTrades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +67,10 @@ export default function TradeHistory() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
-    runBacktest()
+    runBacktest(DEFAULT_BACKTEST_CONFIG)
       .then(res => {
-        setAllTrades(res.data?.trades || generateDemoTrades());
+        const trades = normalizeTrades(res.data?.trades);
+        setAllTrades(trades.length ? trades : generateDemoTrades());
         setLoading(false);
       })
       .catch(() => {
@@ -118,8 +132,6 @@ export default function TradeHistory() {
 
   if (loading) return <PageWrapper><LoadingSpinner message="Loading trade history..." /></PageWrapper>;
 
-  const SortArrow = ({ col }) => sortKey === col ? <span className="sort-arrow">{sortDir === 'asc' ? '▲' : '▼'}</span> : null;
-
   return (
     <PageWrapper>
       <div className="page-header">
@@ -177,14 +189,14 @@ export default function TradeHistory() {
           <table className="data-table" id="trades-table">
             <thead>
               <tr>
-                <th className="sort-header" onClick={() => handleSort('ticker')}>Ticker<SortArrow col="ticker" /></th>
-                <th className="sort-header" onClick={() => handleSort('entry_date')}>Entry Date<SortArrow col="entry_date" /></th>
-                <th className="sort-header" onClick={() => handleSort('exit_date')}>Exit Date<SortArrow col="exit_date" /></th>
-                <th className="sort-header" onClick={() => handleSort('entry_price')}>Entry<SortArrow col="entry_price" /></th>
-                <th className="sort-header" onClick={() => handleSort('exit_price')}>Exit<SortArrow col="exit_price" /></th>
-                <th className="sort-header" onClick={() => handleSort('pnl')}>P/L<SortArrow col="pnl" /></th>
-                <th className="sort-header" onClick={() => handleSort('pnl_pct')}>P/L %<SortArrow col="pnl_pct" /></th>
-                <th className="sort-header" onClick={() => handleSort('duration')}>Duration<SortArrow col="duration" /></th>
+                <th className="sort-header" onClick={() => handleSort('ticker')}>Ticker{renderSortArrow('ticker', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('entry_date')}>Entry Date{renderSortArrow('entry_date', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('exit_date')}>Exit Date{renderSortArrow('exit_date', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('entry_price')}>Entry{renderSortArrow('entry_price', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('exit_price')}>Exit{renderSortArrow('exit_price', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('pnl')}>P/L{renderSortArrow('pnl', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('pnl_pct')}>P/L %{renderSortArrow('pnl_pct', sortKey, sortDir)}</th>
+                <th className="sort-header" onClick={() => handleSort('duration')}>Duration{renderSortArrow('duration', sortKey, sortDir)}</th>
                 <th>Signal</th>
               </tr>
             </thead>

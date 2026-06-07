@@ -12,12 +12,19 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export const DEFAULT_BACKTEST_CONFIG = {
+  tickers: ['AAPL', 'MSFT', 'NVDA', 'META', 'JPM'],
+  start_date: '2024-01-01',
+  end_date: '2024-12-31',
+  capital: 100000,
+};
+
 // ── Data Endpoints ────────────────────────────────────────────
 export const fetchTickers = () => api.get('/data/tickers');
 export const fetchOHLCV = (ticker) => api.get(`/data/${ticker}`);
 
 // ── Backtest Endpoints ────────────────────────────────────────
-export const runBacktest = (config = {}) => api.post('/backtest', config);
+export const runBacktest = (config = {}) => api.post('/backtest/run', config);
 
 // ── Signal Endpoints ──────────────────────────────────────────
 export const fetchSignals = (ticker) => api.get(`/signals/${ticker}`);

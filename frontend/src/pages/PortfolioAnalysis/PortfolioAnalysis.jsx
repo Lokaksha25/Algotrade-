@@ -64,7 +64,6 @@ export default function PortfolioAnalysis() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       fetchPortfolioOptimize().catch(() => null),
       fetchCorrelation().catch(() => null),

@@ -30,9 +30,10 @@ function generateDemoSignals(ticker) {
     ohlcv.push({ time: dayStr, open, high, low, close, volume });
     price = close;
 
-    if (Math.random() < 0.04) {
+    const signalRoll = Math.random();
+    if (signalRoll < 0.04) {
       signals.push({ time: dayStr, type: 'buy', price: close });
-    } else if (Math.random() < 0.04) {
+    } else if (signalRoll < 0.08) {
       signals.push({ time: dayStr, type: 'sell', price: close });
     }
   }
@@ -76,6 +77,61 @@ function generateDemoSignals(ticker) {
 
 const DEMO_TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'JPM'];
 
+function seriesFromArray(dates, values) {
+  return (values || [])
+    .map((value, i) => ({ time: dates?.[i], value }))
+    .filter(point => point.time && Number.isFinite(point.value));
+}
+
+function normalizeSignalData(ohlcvPayload, signalPayload, ticker) {
+  if (!ohlcvPayload?.dates?.length) return generateDemoSignals(ticker);
+
+  const dates = ohlcvPayload.dates;
+  const ohlcv = dates.map((time, i) => ({
+    time,
+    open: ohlcvPayload.open?.[i],
+    high: ohlcvPayload.high?.[i],
+    low: ohlcvPayload.low?.[i],
+    close: ohlcvPayload.close?.[i],
+    volume: ohlcvPayload.volume?.[i],
+  })).filter(d =>
+    Number.isFinite(d.open) &&
+    Number.isFinite(d.high) &&
+    Number.isFinite(d.low) &&
+    Number.isFinite(d.close)
+  );
+
+  const indicators = signalPayload?.indicators || {};
+  const crossoverSignals = signalPayload?.signals?.crossover || [];
+  const signals = crossoverSignals.flatMap(sig => ([
+    { time: dates[sig.buy_idx], type: 'buy', price: sig.buy_price },
+    { time: dates[sig.sell_idx], type: 'sell', price: sig.sell_price },
+  ])).filter(sig => sig.time);
+
+  const fft = signalPayload?.fft_cycles || {};
+  const maxAmplitude = Math.max(...(fft.amplitudes || [1]));
+  const cycles = (fft.periods || []).map((period, i) => ({
+    period,
+    label: fft.cycle_labels?.[i] || `${period}d`,
+    strength: maxAmplitude > 0 ? (fft.amplitudes?.[i] || 0) / maxAmplitude : 0,
+  }));
+
+  const patterns = (signalPayload?.signals?.patterns || []).slice(0, 12).map(pattern => ({
+    name: pattern.pattern,
+    day: dates[pattern.position],
+    type: pattern.signal === 'BUY' ? 'bullish' : 'bearish',
+  }));
+
+  return {
+    ohlcv,
+    signals,
+    sma: seriesFromArray(dates, indicators.sma_short),
+    ema: seriesFromArray(dates, indicators.ema),
+    cycles,
+    patterns,
+  };
+}
+
 export default function SignalExplorer() {
   const [ticker, setTicker] = useState('AAPL');
   const [tickers, setTickers] = useState(DEMO_TICKERS);
@@ -91,13 +147,12 @@ export default function SignalExplorer() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
       fetchOHLCV(ticker).catch(() => null),
       fetchSignals(ticker).catch(() => null),
     ]).then(([ohlcvRes, sigRes]) => {
-      if (ohlcvRes?.data && sigRes?.data) {
-        setData({ ...ohlcvRes.data, ...sigRes.data });
+      if (ohlcvRes?.data) {
+        setData(normalizeSignalData(ohlcvRes.data, sigRes?.data, ticker));
       } else {
         setData(generateDemoSignals(ticker));
       }

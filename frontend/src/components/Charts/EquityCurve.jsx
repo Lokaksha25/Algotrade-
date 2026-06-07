@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createChart, ColorType } from 'lightweight-charts';
+import { AreaSeries, createChart, LineSeries } from 'lightweight-charts';
 
 export default function EquityCurve({ data, benchmarkData, height = 320 }) {
   const chartContainerRef = useRef(null);
@@ -29,7 +29,7 @@ export default function EquityCurve({ data, benchmarkData, height = 320 }) {
     });
 
     // Strategy equity curve
-    const areaSeries = chart.addAreaSeries({
+    const areaSeries = chart.addSeries(AreaSeries, {
       lineColor: '#10b981',
       topColor: 'rgba(16, 185, 129, 0.3)',
       bottomColor: 'rgba(16, 185, 129, 0.02)',
@@ -40,7 +40,7 @@ export default function EquityCurve({ data, benchmarkData, height = 320 }) {
 
     // Benchmark overlay
     if (benchmarkData?.length) {
-      const benchSeries = chart.addLineSeries({
+      const benchSeries = chart.addSeries(LineSeries, {
         color: '#64748b',
         lineWidth: 1.5,
         lineStyle: 2,

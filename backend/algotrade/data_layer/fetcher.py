@@ -12,11 +12,15 @@ from algotrade.utils.types import OHLCVData
 from config import DEFAULT_TICKERS, START_DATE, END_DATE, DATA_DIR
 
 
-def _get_cache_path(ticker: str) -> Path:
+def _safe_cache_part(value: str) -> str:
+    return value.replace("/", "-").replace(":", "-")
+
+
+def _get_cache_path(ticker: str, start: str = START_DATE, end: str = END_DATE) -> Path:
     """Get the cache file path for a ticker."""
     cache_dir = Path(DATA_DIR)
     cache_dir.mkdir(exist_ok=True)
-    return cache_dir / f"{ticker}.csv"
+    return cache_dir / f"{ticker}_{_safe_cache_part(start)}_{_safe_cache_part(end)}.csv"
 
 
 def fetch_single(ticker: str, start: str = START_DATE, end: str = END_DATE, use_cache: bool = True) -> OHLCVData:
@@ -24,7 +28,7 @@ def fetch_single(ticker: str, start: str = START_DATE, end: str = END_DATE, use_
     Fetch OHLCV data for a single ticker.
     Uses local CSV cache if available to avoid repeated API calls.
     """
-    cache_path = _get_cache_path(ticker)
+    cache_path = _get_cache_path(ticker, start, end)
 
     if use_cache and cache_path.exists():
         df = pd.read_csv(cache_path, index_col=0, parse_dates=True)
@@ -37,9 +41,14 @@ def fetch_single(ticker: str, start: str = START_DATE, end: str = END_DATE, use_
             df.columns = df.columns.get_level_values(0)
         df.to_csv(cache_path)
 
+    parsed_dates = pd.to_datetime(df.index, errors="coerce")
+    df = df.loc[~parsed_dates.isna()].copy()
+    parsed_dates = parsed_dates[~parsed_dates.isna()]
+    dates = parsed_dates.strftime("%Y-%m-%d").tolist()
+
     return OHLCVData(
         ticker=ticker,
-        dates=[d.strftime("%Y-%m-%d") for d in df.index],
+        dates=dates,
         open=df["Open"].values.astype(float),
         high=df["High"].values.astype(float),
         low=df["Low"].values.astype(float),

@@ -4,14 +4,13 @@ import MetricCard from '../../components/Cards/MetricCard';
 import EquityCurve from '../../components/Charts/EquityCurve';
 import DonutChart from '../../components/Charts/DonutChart';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
-import { runBacktest } from '../../services/api';
+import { DEFAULT_BACKTEST_CONFIG, runBacktest } from '../../services/api';
 import { formatCurrency, formatPercent, formatNumber } from '../../utils/formatters';
 import { CHART_COLORS } from '../../utils/constants';
 import './Dashboard.css';
 
 // Generate demo data when API is unavailable
 function generateDemoData() {
-  const startDate = new Date('2022-01-03');
   const days = 500;
   let equity = 100000;
   let benchmark = 100000;
@@ -74,16 +73,57 @@ function generateDemoData() {
   };
 }
 
+function normalizeBacktestData(payload) {
+  if (!payload?.dates || !payload?.portfolio_values) return payload;
+
+  const trades = (payload.trades || []).map(t => ({
+    ...t,
+    pnl: t.pnl ?? t.profit ?? 0,
+    pnl_pct: t.pnl_pct ?? ((t.profit_pct ?? 0) / 100),
+    signal: t.signal ?? t.source ?? 'Backtest',
+  }));
+
+  const allocationByTicker = trades.reduce((acc, trade) => {
+    acc[trade.ticker] = (acc[trade.ticker] || 0) + Math.max(1, Math.abs(trade.pnl || 0));
+    return acc;
+  }, {});
+  const allocation = Object.entries(allocationByTicker).map(([name, value], i) => ({
+    name,
+    value,
+    percent: 0,
+    color: CHART_COLORS[i % CHART_COLORS.length],
+  }));
+
+  return {
+    metrics: {
+      total_return: (payload.metrics?.total_return_pct ?? 0) / 100,
+      sharpe_ratio: payload.metrics?.sharpe_ratio ?? 0,
+      max_drawdown: -Math.abs(payload.metrics?.max_drawdown_pct ?? 0) / 100,
+      win_rate: (payload.metrics?.win_rate_pct ?? 0) / 100,
+      total_trades: payload.metrics?.total_trades ?? trades.length,
+      final_equity: payload.portfolio_values[payload.portfolio_values.length - 1],
+    },
+    equity_curve: payload.dates.map((time, i) => ({
+      time,
+      value: payload.portfolio_values[i],
+    })).filter(point => point.value != null),
+    benchmark_curve: (payload.buy_hold_values || []).map((value, i) => ({
+      time: payload.dates[i],
+      value,
+    })).filter(point => point.time && point.value != null),
+    trades,
+    allocation,
+  };
+}
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    runBacktest()
+    runBacktest(DEFAULT_BACKTEST_CONFIG)
       .then(res => {
-        setData(res.data);
+        setData(normalizeBacktestData(res.data));
         setLoading(false);
       })
       .catch(() => {
@@ -98,7 +138,9 @@ export default function Dashboard() {
   const m = data?.metrics || {};
   const alloc = data?.allocation || [];
   const totalAlloc = alloc.reduce((s, a) => s + a.value, 0);
-  const allocWithPct = alloc.map(a => ({ ...a, percent: a.value / totalAlloc }));
+  const allocWithPct = totalAlloc > 0
+    ? alloc.map(a => ({ ...a, percent: a.value / totalAlloc }))
+    : [];
 
   return (
     <PageWrapper>
@@ -155,14 +197,11 @@ export default function Dashboard() {
               {formatCurrency(m.final_equity || 0)}
             </span>
           </div>
-          {/* <EquityCurve
+          <EquityCurve
             data={data?.equity_curve || []}
             benchmarkData={data?.benchmark_curve}
             height={320}
-          /> */}
-          <div style={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-            [Chart Unavailable]
-          </div>
+          />
         </div>
 
         <div className="glass-card glass-card--static dashboard-allocation">

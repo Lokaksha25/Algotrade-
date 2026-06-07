@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { createChart, ColorType } from 'lightweight-charts';
+import {
+  CandlestickSeries,
+  ColorType,
+  createChart,
+  createSeriesMarkers,
+  HistogramSeries,
+  LineSeries,
+} from 'lightweight-charts';
 
 export default function CandlestickChart({ data, signals = [], height = 400, indicators = {} }) {
   const chartContainerRef = useRef(null);
@@ -39,7 +46,7 @@ export default function CandlestickChart({ data, signals = [], height = 400, ind
     chartRef.current = chart;
 
     // Candlestick series
-    const candleSeries = chart.addCandlestickSeries({
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#10b981',
       downColor: '#ef4444',
       borderDownColor: '#ef4444',
@@ -50,7 +57,7 @@ export default function CandlestickChart({ data, signals = [], height = 400, ind
     candleSeries.setData(data);
 
     // Volume histogram
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
     });
@@ -69,7 +76,7 @@ export default function CandlestickChart({ data, signals = [], height = 400, ind
 
     // SMA overlay
     if (indicators.sma?.length) {
-      const smaSeries = chart.addLineSeries({
+      const smaSeries = chart.addSeries(LineSeries, {
         color: '#06b6d4',
         lineWidth: 1.5,
         title: 'SMA',
@@ -79,7 +86,7 @@ export default function CandlestickChart({ data, signals = [], height = 400, ind
 
     // EMA overlay
     if (indicators.ema?.length) {
-      const emaSeries = chart.addLineSeries({
+      const emaSeries = chart.addSeries(LineSeries, {
         color: '#f59e0b',
         lineWidth: 1.5,
         title: 'EMA',
@@ -96,7 +103,7 @@ export default function CandlestickChart({ data, signals = [], height = 400, ind
         shape: s.type === 'buy' ? 'arrowUp' : 'arrowDown',
         text: s.type === 'buy' ? 'B' : 'S',
       }));
-      candleSeries.setMarkers(markers);
+      createSeriesMarkers(candleSeries, markers);
     }
 
     chart.timeScale().fitContent();

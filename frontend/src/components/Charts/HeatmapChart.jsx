@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { CHART_COLORS } from '../../utils/constants';
 
 export default function HeatmapChart({ matrix, labels, height = 360 }) {
   const cellSize = useMemo(() => {

@@ -1,5 +1,5 @@
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid,
+  Scatter, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, Line, ComposedChart,
 } from 'recharts';
 
