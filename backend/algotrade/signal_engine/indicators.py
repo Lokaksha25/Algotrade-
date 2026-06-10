@@ -72,6 +72,8 @@ def sma(prices: np.ndarray, window: int = SMA_SHORT_WINDOW) -> np.ndarray:
     """
     n = len(prices)
     result = np.full(n, np.nan)
+    if window <= 0 or n < window:
+        return result
 
     # Initial window sum
     window_sum = np.sum(prices[:window])
@@ -93,6 +95,8 @@ def ema(prices: np.ndarray, window: int = EMA_WINDOW) -> np.ndarray:
     """
     n = len(prices)
     result = np.full(n, np.nan)
+    if window <= 0 or n < window:
+        return result
     alpha = 2.0 / (window + 1)
 
     # Initialize with SMA of first window
@@ -113,6 +117,8 @@ def rsi(prices: np.ndarray, window: int = RSI_WINDOW) -> np.ndarray:
     """
     n = len(prices)
     result = np.full(n, np.nan)
+    if window <= 0 or n <= window:
+        return result
     deltas = np.diff(prices)
 
     # Initial average gain/loss from first window

@@ -54,7 +54,6 @@ export default function AlgorithmLab() {
   const algoKeys = Object.keys(ALGORITHM_META);
 
   useEffect(() => {
-    setLoading(true);
     fetchBenchmarks()
       .then(res => {
         setBenchmarks(res.data);

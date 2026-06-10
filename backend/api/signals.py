@@ -1,5 +1,6 @@
 """API routes for trade signals and indicators."""
 
+import math
 from fastapi import APIRouter, HTTPException
 from algotrade.data_layer.fetcher import fetch_single
 from algotrade.signal_engine.indicators import compute_all_indicators, generate_sma_crossover_signals
@@ -9,6 +10,17 @@ from algotrade.signal_engine.fft_cycles import extract_cycles
 from config import START_DATE, END_DATE
 
 router = APIRouter()
+
+
+def _json_safe(value):
+    """Convert numpy NaN/inf values into JSON-safe nulls."""
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    return value
 
 
 @router.get("/{ticker}")
@@ -34,7 +46,7 @@ def get_signals(ticker: str, start: str = START_DATE, end: str = END_DATE):
             "low": data.low.tolist(), "close": data.close.tolist(),
             "volume": data.volume.tolist(),
         },
-        "indicators": indicators,
+        "indicators": _json_safe(indicators),
         "signals": {
             "crossover": crossover_signals,
             "profit_windows": profit_windows[:20],
